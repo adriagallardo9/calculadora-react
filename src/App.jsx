@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 import './App.css';
 
 // Helper to round floating point numbers accurately (e.g. 0.1 + 0.2 = 0.3)
@@ -54,7 +55,7 @@ export default function App() {
     localStorage.setItem('calc_theme', theme);
   }, [theme]);
 
-  // Persist history
+  // Persist history to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('calc_history', JSON.stringify(history));
@@ -62,6 +63,61 @@ export default function App() {
       // Ignore storage errors
     }
   }, [history]);
+
+  // Load cloud history from Supabase if configured
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+
+    let isMounted = true;
+    async function loadCloudHistory() {
+      try {
+        const { data, error } = await supabase
+          .from('calculations')
+          .select('id, expression, result, created_at')
+          .order('created_at', { ascending: false })
+          .limit(25);
+
+        if (!error && data && data.length > 0 && isMounted) {
+          setHistory(
+            data.map((item) => ({
+              id: item.id,
+              expression: item.expression,
+              result: item.result,
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn('Supabase fetch error:', err);
+      }
+    }
+
+    loadCloudHistory();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Save calculation helper (saves to local state and Supabase if active)
+  const saveCalculation = useCallback(
+    async (exprString, res) => {
+      const newEntry = { id: Date.now(), expression: exprString, result: res };
+      setHistory((prevHist) => [newEntry, ...prevHist.slice(0, 24)]);
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          await supabase.from('calculations').insert([
+            {
+              expression: exprString,
+              result: String(res),
+            },
+          ]);
+        } catch (err) {
+          console.warn('Error saving to Supabase:', err);
+        }
+      }
+    },
+    []
+  );
 
   // Play subtle audio feedback
   const playClick = useCallback((freq = 550) => {
@@ -211,13 +267,10 @@ export default function App() {
       setOperation(null);
       setOverwrite(true);
 
-      // Add to history
-      setHistory((prevHist) => [
-        { id: Date.now(), expression: exprString, result: res },
-        ...prevHist.slice(0, 24),
-      ]);
+      // Save to history & Supabase
+      saveCalculation(exprString, res);
     }
-  }, [prevValue, operation, currentInput, playClick]);
+  }, [prevValue, operation, currentInput, playClick, saveCalculation]);
 
   // Handle Clear All (AC)
   const handleClear = useCallback(() => {
@@ -306,13 +359,10 @@ export default function App() {
         setExpression(`${unaryExpr} =`);
         setOverwrite(true);
 
-        setHistory((prevHist) => [
-          { id: Date.now(), expression: unaryExpr, result: res },
-          ...prevHist.slice(0, 24),
-        ]);
+        saveCalculation(unaryExpr, res);
       }
     },
-    [currentInput, prevValue, operation, playClick]
+    [currentInput, prevValue, operation, playClick, saveCalculation]
   );
 
   const handleSquareRoot = useCallback(() => {
@@ -659,7 +709,19 @@ export default function App() {
         {showHistory && (
           <div className="history-drawer">
             <div className="history-header">
-              <h3>🕒 Historial</h3>
+              <div className="history-title-wrap">
+                <h3>🕒 Historial</h3>
+                <span
+                  className={`cloud-badge ${isSupabaseConfigured ? 'connected' : 'offline'}`}
+                  title={
+                    isSupabaseConfigured
+                      ? 'Conectado y sincronizado con Supabase'
+                      : 'Modo local (Agrega VITE_SUPABASE_ANON_KEY en .env)'
+                  }
+                >
+                  {isSupabaseConfigured ? '☁️ Supabase' : '💾 Local'}
+                </span>
+              </div>
               <button
                 className="icon-btn"
                 onClick={() => setShowHistory(false)}
@@ -696,7 +758,16 @@ export default function App() {
               <div className="history-footer">
                 <button
                   className="btn-clear-history"
-                  onClick={() => setHistory([])}
+                  onClick={async () => {
+                    setHistory([]);
+                    if (isSupabaseConfigured && supabase) {
+                      try {
+                        await supabase.from('calculations').delete().neq('id', 0);
+                      } catch (err) {
+                        console.warn('Error clearing Supabase history:', err);
+                      }
+                    }
+                  }}
                   type="button"
                 >
                   Vaciar Historial

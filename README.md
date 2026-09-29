@@ -60,3 +60,26 @@ Una calculadora moderna, responsiva y completa creada con **React** y **Vite**.
    ```bash
    npm run build
    ```
+
+---
+
+## ☁️ Integración con Supabase
+
+El proyecto está preparado para sincronizar el historial de cálculos en la nube con Supabase (`https://plfqgprrhgewvztjbikp.supabase.co`).
+
+1. **Crear la tabla en Supabase**:
+   Ejecuta el script [supabase_schema.sql](file:///c:/Users/erick/OneDrive/Desktop/calculadora/supabase_schema.sql) en el **SQL Editor** de tu panel de Supabase.
+
+2. **Configurar variables de entorno**:
+   Copia el archivo `.env.example` a `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Y añade tu clave pública `anon` de Supabase:
+   ```env
+   VITE_SUPABASE_URL=https://plfqgprrhgewvztjbikp.supabase.co
+   VITE_SUPABASE_ANON_KEY=tu_clave_anon_aqui
+   ```
+
+3. **Fallback sin conexión / offline**:
+   Si no se define la clave `anon`, la aplicación continúa funcionando normalmente almacenando el historial en `localStorage`.
