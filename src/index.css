@@ -42,11 +42,11 @@
   --btn-equals-active: #047857;
   --btn-equals-text: #ffffff;
 
-  --btn-sci-bg: rgba(168, 85, 247, 0.12);
-  --btn-sci-hover: rgba(168, 85, 247, 0.22);
-  --btn-sci-active: rgba(168, 85, 247, 0.3);
-  --btn-sci-border: rgba(168, 85, 247, 0.25);
-  --btn-sci-text: #c084fc;
+  --btn-sci-bg: rgba(234, 179, 8, 0.16);
+  --btn-sci-hover: rgba(234, 179, 8, 0.28);
+  --btn-sci-active: rgba(234, 179, 8, 0.38);
+  --btn-sci-border: rgba(234, 179, 8, 0.4);
+  --btn-sci-text: #facc15;
 
   --panel-bg: rgba(18, 22, 33, 0.95);
   --panel-border: rgba(255, 255, 255, 0.1);
@@ -85,11 +85,11 @@
   --btn-equals-active: #047857;
   --btn-equals-text: #ffffff;
 
-  --btn-sci-bg: #f3e8ff;
-  --btn-sci-hover: #e9d5ff;
-  --btn-sci-active: #d8b4fe;
-  --btn-sci-border: #d8b4fe;
-  --btn-sci-text: #7e22ce;
+  --btn-sci-bg: #fef9c3;
+  --btn-sci-hover: #fef08a;
+  --btn-sci-active: #fde047;
+  --btn-sci-border: #facc15;
+  --btn-sci-text: #854d0e;
 
   --panel-bg: rgba(255, 255, 255, 0.98);
   --panel-border: rgba(0, 0, 0, 0.1);
